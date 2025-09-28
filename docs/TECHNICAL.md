@@ -1,0 +1,295 @@
+# 🔧 Technical Documentation
+
+This document contains all technical details, development information, and advanced configuration for the AI Assistant Chrome Extension.
+
+## 🏗️ Architecture
+
+```
+power-apps/
+├── backend/              # Node.js Express server
+│   ├── services/         # AI service integrations
+│   ├── routes/          # API endpoints
+│   ├── mcp-servers/     # MCP tool implementations
+│   └── tests/           # Backend tests
+├── chrome-extension/     # React Chrome extension
+│   ├── src/             # React components and services
+│   ├── public/          # Extension manifest and assets
+│   └── dist/            # Built extension (generated)
+└── README.md            # Main documentation
+```
+
+## 🚀 Development Setup
+
+### Prerequisites
+
+- **Node.js** (v16 or higher)
+- **npm** or **yarn**
+- **Chrome browser** (for extension)
+
+### GitHub Actions CI/CD
+
+For automated testing and deployment, see the [GitHub Actions Setup Guide](GITHUB_ACTIONS_SETUP.md).
+
+The project includes three main workflows:
+- **CI Pipeline**: Main testing and build verification
+- **Auto Fix CI**: Automatic CI failure resolution
+- **Store Coverage Enforcer**: Automatic test coverage improvement to 100%
+
+### Backend Development
+
+```bash
+cd backend
+
+# Install dependencies
+npm install
+
+# Copy environment template
+cp env.example .env
+
+# Edit .env with your API keys
+# Start the server
+npm run dev
+```
+
+The backend server will start on `http://localhost:3001`
+
+### Chrome Extension Development
+
+```bash
+cd chrome-extension
+
+# Install dependencies
+npm install
+
+# Copy environment template
+cp env.example .env
+
+# Edit .env with your settings
+# Build the extension
+npm run build:extension
+```
+
+## ⚙️ Advanced Configuration
+
+### Backend Environment Variables
+
+Create a `.env` file in the `backend/` directory:
+
+```env
+# Required API Keys
+OPENAI_API_KEY=sk-your-actual-openai-key-here
+GEMINI_API_KEY=AIza-your-actual-gemini-key-here
+NOTION_API_KEY=ntn_your-actual-notion-key-here
+FIRECRAWL_API_KEY=fc-your-actual-firecrawl-key-here
+
+# Server Configuration
+PORT=3001
+NODE_ENV=development
+
+# CORS Configuration
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+### Chrome Extension Environment Variables
+
+Create a `.env` file in the `chrome-extension/` directory:
+
+```env
+# App Configuration
+VITE_APP_NAME=AI Copilot
+VITE_API_BASE_URL=http://localhost:3001
+VITE_DEFAULT_MODEL=gemini-2.5-flash
+
+# Development Settings
+VITE_DEBUG_MODE=true
+```
+
+## 🔌 API Reference
+
+### Backend API Endpoints
+
+The backend provides RESTful APIs:
+
+- `GET /health` - Health check
+- `POST /api/chat/stream` - Stream chat responses
+- `GET /api/chat/models` - Get available AI models
+- `POST /api/chat/non-stream` - Non-streaming chat responses
+
+### MCP Tools
+
+The system includes built-in MCP tools:
+- **check-creator**: Get project creator information
+- **get-project-info**: Get comprehensive project details
+
+## 🧪 Testing
+
+### Backend Tests
+
+```bash
+cd backend
+
+# Test MCP integration
+npm run test-mcp
+
+# Test specific MCP servers
+node tests/test-notion-article-correction-mcp.js
+node tests/test-openai-cost-mcp.js
+node tests/test-web-page-summary-for-firecrawl-mcp.js
+```
+
+### Chrome Extension Tests
+
+```bash
+cd chrome-extension
+
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run specific test suites
+npm run test:stores
+npm run test:components
+```
+
+## 🛠️ Available Scripts
+
+### Backend Scripts
+- `npm start` - Start production server
+- `npm run dev` - Start development server with nodemon
+- `npm run mcp-server` - Start MCP server manually
+- `npm run test-mcp` - Test MCP integration
+- `npm run demo-mcp` - Run MCP usage examples
+
+### Chrome Extension Scripts
+- `npm run dev` - Start Vite development server
+- `npm run build` - Build React application
+- `npm run build:extension` - Build complete Chrome extension
+- `npm test` - Run test suite
+- `npm run lint` - Lint code
+
+## 🔧 Development Commands
+
+### Backend Development
+
+```bash
+cd backend
+
+# Development with auto-reload
+npm run dev
+
+# Start MCP server manually (if needed)
+npm run mcp-server
+
+# Run example MCP usage
+npm run demo-mcp
+```
+
+### Chrome Extension Development
+
+```bash
+cd chrome-extension
+
+# Development mode
+npm run dev
+
+# Build for production
+npm run build
+
+# Build extension package
+npm run build:extension
+
+# Lint code
+npm run lint
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Backend won't start:**
+- Check that all required environment variables are set in `.env`
+- Verify API keys are valid and have sufficient credits
+- Ensure port 3001 is not in use
+
+**Chrome extension not loading:**
+- Make sure the extension is built: `npm run build:extension`
+- Check that Developer Mode is enabled in Chrome
+- Verify the `dist` folder contains all necessary files
+
+**CORS errors:**
+- Verify `ALLOWED_ORIGINS` in backend `.env` includes your frontend URL
+- Check that backend is running on the expected port
+
+**API key errors:**
+- Ensure API keys are correctly formatted (no extra spaces/quotes)
+- Verify API keys have sufficient credits and are not expired
+- Check API key permissions and rate limits
+
+### Debug Mode
+
+Enable debug logging:
+
+**Backend:** Set `NODE_ENV=development` in `.env`
+**Chrome Extension:** Set `VITE_DEBUG_MODE=true` in `.env`
+
+## 📚 Complete Documentation Index
+
+This section provides a comprehensive index of all documentation files in the project:
+
+### 🚀 Setup & Configuration
+- [Environment Setup Guide](./ENVIRONMENT_SETUP.md) - Comprehensive setup instructions
+
+### 🤖 Backend Documentation
+- [Backend README](./backend/BACKEND_README.md) - Backend development guide
+- [Backend Environment Setup](./backend/BACKEND_ENVIRONMENT_SETUP.md) - Backend-specific configuration
+- [Chat Sessions](./backend/CHAT_SESSIONS_README.md) - Session management system
+
+### 🌐 Chrome Extension Documentation
+- [Chrome Extension README](./extension/CHROME_EXTENSION_README.md) - Extension development guide
+- [Chrome Extension Environment](./extension/CHROME_EXTENSION_ENVIRONMENT.md) - Extension configuration
+- [Chrome Extension Tests](./extension/CHROME_EXTENSION_TESTS_README.md) - Testing documentation
+- [Chrome Extension Stores](./extension/CHROME_EXTENSION_STORES_README.md) - State management documentation
+- [ForceConfigModal Component](./ForceConfigModal.README.md) - Force configuration modal documentation
+
+### 🔌 MCP (Model Context Protocol) Documentation
+- [MCP Integration Guide](./mcp/MCP_INTEGRATION_README.md) - Model Context Protocol setup and usage
+- [MCP Servers Overview](./mcp/MCP_SERVERS_README.md) - MCP servers documentation
+- [Firecrawl MCP Server](./mcp/FIRECRAWL_MCP_README.md) - Web page summary MCP server
+- [Notion MCP Server](./mcp/NOTION_MCP_README.md) - Notion article correction MCP server
+- [OpenAI Cost MCP Server](./mcp/OPENAI_COST_MCP_README.md) - OpenAI cost tracking MCP server
+
+### ⚡ Features & Usage
+- [Turbo Mode Documentation](./features/TURBO_MODE_README.md) - Multi-model comparison feature
+- [Screenshot Capture Guide](./features/SCREENSHOT_README.md) - Screen capture functionality
+- [Screenshot Fix Guide](./features/SCREENSHOT_FIX_README.md) - Screenshot functionality fixes
+- [Settings Management](./features/SETTINGS_README.md) - Extension settings and preferences
+- [Coverage Enforcer](./features/COVERAGE_ENFORCER_README.md) - Automatic test coverage improvement workflow
+
+### 🔧 Development & Maintenance
+- [Migration Complete](./development/MIGRATION_COMPLETE.md) - Migration documentation
+- [State Refactor Improvement](./development/STATE_REFACTOR_IMPROVEMENT.md) - State management improvements
+
+
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 🙏 Acknowledgments
+
+- [OpenAI](https://openai.com/) for GPT models
+- [Google](https://ai.google.dev/) for Gemini models
+- [Model Context Protocol](https://modelcontextprotocol.io/) for tool integration
+- [React](https://reactjs.org/) for the frontend framework
+- [Ant Design](https://ant.design/) for UI components
+- [Express.js](https://expressjs.com/) for the backend framework
+
+## 📄 License
+
+MIT License - see the [LICENSE](../LICENSE) file for details.

@@ -1,0 +1,255 @@
+name: CI Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  # Unit Tests for Chrome Extension
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: chrome-extension/package-lock.json
+        
+    - name: Install Chrome Extension dependencies
+      working-directory: ./chrome-extension
+      run: npm ci
+      
+    - name: Build Chrome Extension
+      working-directory: ./chrome-extension
+      run: npm run build
+      
+    - name: Run Unit Tests (Components)
+      working-directory: ./chrome-extension
+      run: npm run test:components
+      
+    - name: Run Unit Tests (Stores)
+      working-directory: ./chrome-extension
+      run: npm run test:stores
+      
+    - name: Run Stores Coverage Report
+      working-directory: ./chrome-extension
+      run: npm run test:stores:coverage
+      
+    - name: Upload Stores Coverage Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: stores-coverage-report
+        path: chrome-extension/coverage/
+        retention-days: 1
+
+  # Backend Tests
+  # backend-tests:
+  #   name: Backend Tests
+  #   runs-on: ubuntu-latest
+    
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+      
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '18'
+  #       cache: 'npm'
+  #       cache-dependency-path: backend/package-lock.json
+        
+  #   - name: Install Backend dependencies
+  #     working-directory: ./backend
+  #     run: npm ci
+      
+  #   - name: Run Backend Tests
+  #     working-directory: ./backend
+  #     env:
+  #       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  #       NODE_ENV: test
+  #       PORT: 3001
+  #     run: |
+  #       # Run individual test files since there's no test script in backend package.json
+  #       node tests/test-gemini-conversation-tokens.js
+  #       node tests/test-gemini-token-counting.js
+  #       node tests/test-base64-image-upload.js
+  #       node tests/test-file-attachments.js
+  #       node tests/test-chat-sessions.js
+
+  # E2E Tests
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          chrome-extension/package-lock.json
+          backend/package-lock.json
+        
+    - name: Install Chrome Extension dependencies
+      working-directory: ./chrome-extension
+      run: npm ci
+      
+    - name: Install Backend dependencies
+      working-directory: ./backend
+      run: npm ci
+      
+    - name: Build Chrome Extension for E2E
+      working-directory: ./chrome-extension
+      run: npm run build
+      
+    - name: Install Puppeteer dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget gnupg
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        
+    - name: Setup virtual display for E2E tests
+      run: |
+        # Install Xvfb for virtual display
+        sudo apt-get install -y xvfb
+        # Start virtual display
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1280x720x24 &
+        sleep 3  # Give Xvfb time to start
+        echo "Virtual display started on :99"
+        # Verify display is working
+        xdpyinfo -display :99 > /dev/null 2>&1 && echo "Display :99 is working" || echo "Display :99 failed to start"
+        
+    # Remove the "Start Backend Server for E2E Tests" step - the E2E test handles this
+        
+    - name: Run E2E Tests - Gemini Chat
+      working-directory: ./chrome-extension
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        NODE_ENV: test
+        CI: true
+        GITHUB_ACTIONS: true
+        DISPLAY: :99
+        HEADLESS: true
+      run: npm run test:e2e:chat
+      
+    - name: Run E2E Tests - Image Upload
+      working-directory: ./chrome-extension
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        NODE_ENV: test
+        CI: true
+        GITHUB_ACTIONS: true
+        DISPLAY: :99
+        HEADLESS: true
+      run: npm run test:e2e:image
+      
+    - name: Run E2E Tests - Drag and Drop
+      working-directory: ./chrome-extension
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        NODE_ENV: test
+        CI: true
+        GITHUB_ACTIONS: true
+        DISPLAY: :99
+        HEADLESS: true
+      run: npm run test:e2e:drag-drop
+      
+    - name: Upload E2E Test Screenshots
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: e2e-test-screenshots
+        path: chrome-extension/tests/e2e/screenshots/
+        retention-days: 1
+
+  # Lint and Code Quality
+  # lint-and-quality:
+  #   name: Lint and Code Quality
+  #   runs-on: ubuntu-latest
+    
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+      
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '18'
+  #       cache: 'npm'
+  #       cache-dependency-path: chrome-extension/package-lock.json
+        
+  #   - name: Install Chrome Extension dependencies
+  #     working-directory: ./chrome-extension
+  #     run: npm ci
+      
+  #   - name: Run ESLint
+  #     working-directory: ./chrome-extension
+  #     run: npm run lint
+
+  # Build Verification
+  build-verification:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          chrome-extension/package-lock.json
+          backend/package-lock.json
+        
+    - name: Install Chrome Extension dependencies
+      working-directory: ./chrome-extension
+      run: npm ci
+      
+    - name: Build Chrome Extension
+      working-directory: ./chrome-extension
+      run: npm run build
+      
+    - name: Verify Extension Files
+      run: |
+        echo "Verifying Chrome Extension build files..."
+        ls -la chrome-extension/dist/
+        test -f chrome-extension/dist/manifest.json
+        test -f chrome-extension/dist/background.js
+        test -f chrome-extension/dist/content.js
+        test -f chrome-extension/dist/main.js
+        echo "✅ All required extension files present"
+        
+        
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts-${{ matrix.os }}
+        path: |
+          chrome-extension/dist/
+        retention-days: 1
+
